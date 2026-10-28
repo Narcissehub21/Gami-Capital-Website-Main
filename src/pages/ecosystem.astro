@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import Guides from '../components/Guides.astro';
+import SpecTable from '../components/SpecTable.astro';
+import EcoLoop from '../components/EcoLoop.astro';
+import InsightList from '../components/InsightList.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { getInsights } from '../lib/content';
+import { SITE } from '../site.config.mjs';
+import { orgId } from '../lib/seo';
+
+const crumbs = [{ name: 'Ecosystem', href: '/ecosystem' }];
+const site = Astro.site!;
+const related = (await getInsights()).filter((p) => p.data.tags.some((t) => ['Ecosystem', 'Gami Labs', 'Vaults'].includes(t))).slice(0, 3);
+---
+<Base
+  title="Gami Capital and Gami Labs | Gami Capital"
+  description="Gami Capital invests in onchain infrastructure and Gami Labs curates institutional DeFi vaults. How the two companies work together for the founders we back."
+  nav="dark"
+  crumbs={crumbs}
+  jsonld={[{
+    '@type': 'WebPage', name: 'Ecosystem', url: new URL('/ecosystem', site).href,
+    about: [{ '@id': orgId(site) }, { '@type': 'Organization', name: 'Gami Labs', url: SITE.labsUrl }],
+  }]}
+>
+  <PageHero
+    theme="ink"
+    crumbs={crumbs}
+    ix="02"
+    title="Gami Capital and Gami Labs work side by side."
+    lead="Gami Capital and Gami Labs are separate companies that work closely together. Founders we back get capital and network from Gami Capital, and onchain liquidity and vault curation from Gami Labs."
+  />
+
+  <section class="sec eco" data-nav="dark" style="padding-top:24px">
+    <div class="wrap">
+      <Guides />
+      <SpecTable />
+    </div>
+  </section>
+
+  <section class="sec eco" data-nav="dark" style="padding-top:0">
+    <div class="wrap">
+      <Guides />
+      <div class="head">
+        <span class="eyebrow rv"><span class="ix">02.1</span>The loop</span>
+        <h2 class="rv d1">How each company feeds the other.</h2>
+        <p class="rv d2">Gami Capital backs the infrastructure and Gami Labs runs live strategies on it. What Labs learns in production informs how Capital underwrites the next investment.</p>
+      </div>
+      <EcoLoop />
+      <div class="ops">
+        <span class="ok rv">How Gami Labs operates</span>
+        <div class="rv"><span class="k">vaults</span><h3>Lagoon vault contracts</h3><p>Vaults run on Lagoon's audited contracts. Deposits and withdrawals happen onchain, and positions can be checked at any time.</p></div>
+        <div class="rv d1"><span class="k">custody</span><h3>Fordefi MPC</h3><p>Assets are held in an MPC wallet. Every transaction follows a written policy with separate admin, manager and controller roles, so no single person can move funds.</p></div>
+        <div class="rv d2"><span class="k">monitoring</span><h3>Hypernative</h3><p>Vaults and their underlying positions are watched in real time, with alerts on exploits, depegs and abnormal flows.</p></div>
+      </div>
+      <div class="partners rv">
+        <span class="pk">labs protocols</span>
+        <div class="pv"><span>Morpho</span><span>Aave</span><span>Curve DAO</span><span>Pendle</span><span>Spectra</span><span>Stake DAO</span><span>Silo Finance</span></div>
+        <span class="pk">labs infrastructure</span>
+        <div class="pv"><a href="/portfolio/lagoon">Lagoon</a><span>Upshift</span><span>Hypernative</span><span>Fordefi</span></div>
+        <a class="btn btn-p go" href={SITE.labsUrl} target="_blank" rel="noopener">Visit Gami Labs <span class="ar">↗</span></a>
+      </div>
+    </div>
+  </section>
+
+  {related.length > 0 && (
+    <section class="sec latest" data-nav="light">
+      <div class="wrap">
+        <div class="head">
+          <span class="eyebrow rv"><span class="ix">02.2</span>Read more</span>
+          <h2 class="rv d1">Further reading.</h2>
+        </div>
+        <InsightList posts={related} compact />
+      </div>
+    </section>
+  )}
+
+  <CtaBand />
+</Base>

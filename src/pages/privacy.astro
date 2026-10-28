@@ -1,0 +1,7 @@
+---
+import { getEntry } from 'astro:content';
+import LegalDoc from '../components/LegalDoc.astro';
+
+const entry = (await getEntry('legal', 'privacy'))!;
+---
+<LegalDoc entry={entry} path="/privacy" />

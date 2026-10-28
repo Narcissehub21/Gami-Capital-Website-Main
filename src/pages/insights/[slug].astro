@@ -1,0 +1,130 @@
+---
+import { render, getEntry, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+import Avatar from '../../components/Avatar.astro';
+import InsightList from '../../components/InsightList.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { getInsights } from '../../lib/content';
+import { orgId, personId, fmtDate, isoDate } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const posts = await getInsights();
+  return posts.map((entry) => ({ params: { slug: entry.id }, props: { entry, posts } }));
+}
+interface Props { entry: CollectionEntry<'insights'>; posts: CollectionEntry<'insights'>[] }
+const { entry, posts } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+const author = await getEntry(d.author);
+const companies = (await Promise.all(d.companies.map((c) => getEntry(c)))).filter(Boolean);
+const site = Astro.site!;
+const url = new URL(`/insights/${entry.id}`, site).href;
+const crumbs = [{ name: 'Insights', href: '/insights' }, { name: d.title, href: `/insights/${entry.id}` }];
+
+const words = (entry.body ?? '').split(/\s+/).filter(Boolean).length;
+const minutes = Math.max(1, Math.round(words / 220));
+const ogImage = `/og/insights/${entry.id}.png`;
+
+// Other articles: same tags first, then the most recent.
+const others = posts.filter((p) => p.id !== entry.id);
+const score = (p: CollectionEntry<'insights'>) => p.data.tags.filter((t) => d.tags.includes(t)).length;
+const more = [...others].sort((a, b) => score(b) - score(a) || b.data.date.getTime() - a.data.date.getTime()).slice(0, 3);
+
+const share = encodeURIComponent(url);
+---
+<Base
+  title={`${d.title} | Gami Capital`}
+  description={d.description}
+  type="article"
+  nav="light"
+  image={ogImage}
+  imageAlt={d.title}
+  published={d.date}
+  modified={d.updated ?? d.date}
+  crumbs={crumbs}
+  jsonld={[{
+    '@type': 'BlogPosting',
+    '@id': `${url}#article`,
+    headline: d.title,
+    description: d.description,
+    url,
+    mainEntityOfPage: url,
+    image: new URL(ogImage, site).href,
+    datePublished: isoDate(d.date),
+    dateModified: isoDate(d.updated ?? d.date),
+    wordCount: words,
+    inLanguage: 'en',
+    keywords: d.tags.join(', '),
+    author: author ? { '@type': 'Person', '@id': personId(author.id, site), name: author.data.name, url: new URL(`/team/${author.id}`, site).href } : undefined,
+    publisher: { '@id': orgId(site) },
+    ...(companies.length ? { mentions: companies.map((c) => ({ '@type': 'Organization', name: c!.data.name, ...(c!.data.website ? { url: c!.data.website } : {}) })) } : {}),
+  }]}
+>
+  <PageHero theme="light" crumbs={crumbs} title={d.title} lead={d.description}>
+    <div slot="before-title" class="rv">
+      {d.tags.length > 0 && <span class="eyebrow" style="margin-bottom:22px">{d.tags[0]}</span>}
+    </div>
+    <div slot="after-lead" class="art-meta rv d2">
+      <span><time datetime={isoDate(d.date)}>{fmtDate(d.date)}</time></span>
+      {d.updated && <span>updated <time datetime={isoDate(d.updated)}>{fmtDate(d.updated)}</time></span>}
+      {author && <a href={`/team/${author.id}`}>by <b>{author.data.name}</b></a>}
+      <span>{minutes} min read</span>
+    </div>
+  </PageHero>
+
+  <article class="sec" data-nav="light" style="padding-top:88px">
+    <div class="wrap">
+      <div class="read">
+        <aside class="aside"><div class="sticky">
+          {author && (
+            <div class="block">
+              <p class="h">author</p>
+              <a class="by" href={`/team/${author.id}`}>
+                <Avatar name={author.data.name} photo={author.data.photo} size={48} />
+                <span class="who"><b>{author.data.name}</b><span>{author.data.role}, Gami Capital</span></span>
+              </a>
+            </div>
+          )}
+          {companies.length > 0 && (
+            <div class="block">
+              <p class="h">companies</p>
+              <div class="cos">
+                {companies.map((c) => <a href={`/portfolio/${c!.id}`}>{c!.data.logo && <img src={c!.data.logo} alt="" width="26" height="26" loading="lazy">}{c!.data.name}</a>)}
+              </div>
+            </div>
+          )}
+          {d.tags.length > 0 && (
+            <div class="block">
+              <p class="h">topics</p>
+              <div class="tg">{d.tags.map((t) => <span>{t}</span>)}</div>
+            </div>
+          )}
+          <div class="block">
+            <p class="h">share</p>
+            <div class="tg">
+              <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${share}`} target="_blank" rel="noopener">LinkedIn ↗</a>
+              <a href={`https://x.com/intent/post?url=${share}&text=${encodeURIComponent(d.title)}`} target="_blank" rel="noopener">X ↗</a>
+            </div>
+          </div>
+        </div></aside>
+        <div class="prose"><Content /></div>
+      </div>
+    </div>
+  </article>
+
+  {more.length > 0 && (
+    <section class="sec latest" data-nav="light">
+      <div class="wrap">
+        <div class="head">
+          <span class="eyebrow rv">Insights</span>
+          <h2 class="rv d1">More articles.</h2>
+        </div>
+        <InsightList posts={more} compact />
+        <div class="more rv"><a href="/insights">All insights <span aria-hidden="true">→</span></a></div>
+      </div>
+    </section>
+  )}
+
+  <CtaBand />
+</Base>

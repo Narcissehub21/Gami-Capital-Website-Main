@@ -1,0 +1,90 @@
+---
+import Guides from './Guides.astro';
+interface Props { count: number; span: string }
+const { count, span } = Astro.props;
+---
+<section class="hero" data-nav="indigo">
+  <canvas id="field" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <Guides />
+    <div class="tag rv"><b>Gami Capital</b><span class="sl">/</span><span class="dsc">venture, onchain finance and structuring</span></div>
+    <h1><span class="ln"><span>Institutional capital</span></span><span class="ln"><span>for the onchain economy.</span></span></h1>
+    <p class="sub rv d2"><b>Gami Capital</b> invests in the founders, protocols and markets building onchain finance. Its sister company, <b>Gami Labs</b>, curates institutional-grade DeFi vaults, provides liquidity and brings experience in designing complex onchain financial products and strategies.</p>
+    <div class="paths">
+      <a class="path rv d2" href="/approach">
+        <span class="k">01 investment</span><span class="h3">Gami Capital</span>
+        <p>Venture, onchain finance and structuring.</p>
+        <span class="go" aria-hidden="true">→</span>
+      </a>
+      <a class="path labs rv d3" href="/ecosystem">
+        <span class="k">02 onchain vaults</span><span class="h3">Gami Labs</span>
+        <p>DeFi vault curation, liquidity and onchain strategy design.</p>
+        <span class="go" aria-hidden="true">→</span>
+      </a>
+    </div>
+    <div class="status">
+      <span><b>{count}</b> portfolio companies</span>
+      <span class="hide-m"><b>{span}</b></span>
+      <span class="hide-m">pre-seed → strategic</span>
+      <span class="live" id="blk"><i class="pulse"></i>eth block <b id="blkN"></b></span>
+      <span class="r" id="clk" hidden>GVA <b id="clock"></b></span>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Hero: a field of blocks; one column commits at a time, left to right.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = document.getElementById('field') as HTMLCanvasElement;
+  const cx = cv.getContext('2d')!;
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  type Col = { x: number; s: number; cells: { y: number; w: number }[]; t: number };
+  let W = 0, H = 0, cols: Col[] = [], heroVis = true, head = 0, lastCommit = 0;
+  function size() {
+    W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = []; const g = W < 700 ? 26 : 32, s = W < 700 ? 4 : 5;
+    for (let x = g / 2; x < W; x += g) {
+      const c: Col = { x, s, cells: [], t: -1e9 };
+      for (let y = g / 2; y < H; y += g) {
+        const fx = x / W, fy = y / H, w = Math.max(0, fx - 0.46) * 1.8 * Math.max(0, 1 - Math.abs(fy - 0.38) * 1.35);
+        if (w > 0.03 && Math.random() < 0.55 + w * 0.4) c.cells.push({ y, w: Math.min(1, w) });
+      }
+      if (c.cells.length) cols.push(c);
+    }
+    head = 0;
+  }
+  function draw(t: number) {
+    if (heroVis && cols.length) {
+      if (!reduce && t - lastCommit > 520) { lastCommit = t; cols[head].t = t; head = (head + 1) % cols.length; }
+      cx.clearRect(0, 0, W, H);
+      for (const c of cols) {
+        const f = Math.max(0, 1 - (t - c.t) / 1800);
+        for (const q of c.cells) {
+          const a = q.w * 0.32 + f * q.w * 0.55;
+          cx.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')';
+          cx.fillRect(c.x - c.s / 2, q.y - c.s / 2, c.s, c.s);
+        }
+      }
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  size(); requestAnimationFrame(draw);
+  addEventListener('resize', () => { size(); if (reduce) draw(0); });
+  new IntersectionObserver((e) => { heroVis = e[0].isIntersecting; }).observe(cv);
+
+  // Status bar: Geneva time and latest Ethereum block.
+  // The block comes from our own /api/block function (see /api), so the visitor's browser
+  // never talks to a third-party node. Hidden if the function is unavailable (e.g. astro dev).
+  const clock = document.getElementById('clock')!;
+  const tickClock = () => { try { clock.textContent = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' }).format(new Date()); clock.parentElement!.hidden = false; } catch { /* ignore */ } };
+  tickClock(); setInterval(tickClock, 15000);
+  const blk = document.getElementById('blk')!, blkN = document.getElementById('blkN')!;
+  function fetchBlock() {
+    if (document.hidden) return;
+    fetch('/api/block')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((j) => { const n = Number(j.block); if (n) { blkN.textContent = '#' + n.toLocaleString('en-US'); blk.classList.add('on'); } else blk.classList.remove('on'); })
+      .catch(() => blk.classList.remove('on'));
+  }
+  fetchBlock(); setInterval(fetchBlock, 12000);
+</script>

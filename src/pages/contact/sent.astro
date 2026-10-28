@@ -1,0 +1,13 @@
+---
+// Shown after the contact form was sent without JavaScript.
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+---
+<Base title="Message sent | Gami Capital" description="Your message has reached the Gami Capital team." noindex>
+  <PageHero crumbs={[{ name: 'Contact', href: '/contact' }, { name: 'Sent', href: '/contact/sent' }]} title="Thank you." lead="Your message has reached the team. We will come back to you shortly.">
+    <div slot="after-lead" class="co-site on-indigo rv d2">
+      <a class="btn btn-w" href="/">Back to the home page <span class="ar">→</span></a>
+      <a class="btn btn-o" href="/portfolio">See the portfolio</a>
+    </div>
+  </PageHero>
+</Base>

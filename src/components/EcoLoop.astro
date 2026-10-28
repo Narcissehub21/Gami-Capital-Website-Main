@@ -1,0 +1,123 @@
+---
+// The Capital → Labs loop. The SVG is rendered at build time so the content is in the HTML;
+// the script only adds the autoplay and click interactions.
+const F = [
+  { t: 'Capital', e: 'gami capital', s: 'c', a: 210, x: 'Gami Capital invests in onchain infrastructure, from oracles and credit to vault infrastructure.' },
+  { t: 'Network', e: 'shared', s: 's', a: 270, x: 'Gami Labs works with more than 150 protocols. With portfolio founders and co-investors, that network keeps both companies close to the market.' },
+  { t: 'Protocols', e: 'shared', s: 's', a: 330, x: 'Gami Labs works with a restricted set of vetted DeFi protocols, including Morpho, Aave, Curve DAO, Pendle, Spectra, Stake DAO and Silo Finance.' },
+  { t: 'Labs', e: 'gami labs', s: 'l', a: 30, x: 'Gami Labs curates vaults across those protocols, rebalanced dynamically, with real-time monitoring and MPC custody.' },
+  { t: 'Vaults', e: 'gami labs', s: 'l', a: 90, x: 'Public and private vaults for BTC, ETH, USDC and XRP, with monthly factsheets connected to NAV systems and onchain analytics.' },
+  { t: 'Experience', e: 'gami capital', s: 'c', a: 150, x: 'What Labs sees in live markets shapes how Capital underwrites the next investment.' },
+];
+const CX = 320, CY = 300, R = 200;
+const col: Record<string, string> = { c: '#9496E6', l: '#6FB0B4', s: '#FFFFFF' };
+const r2 = (n: number) => Math.round(n * 100) / 100;
+const pt = (a: number, r = R) => { const t = (a * Math.PI) / 180; return [r2(CX + r * Math.cos(t)), r2(CY + r * Math.sin(t))]; };
+const arcs = F.map((f, i) => {
+  const p0 = pt(f.a + 9), p1 = pt(f.a + 51), nx = F[(i + 1) % 6];
+  return { d: `M${p0} A${R} ${R} 0 0 1 ${p1}`, stroke: col[nx.s === 's' ? f.s : nx.s], on: i === 5 };
+});
+const nodes = F.map((f, i) => {
+  const p = pt(f.a), c = Math.cos((f.a * Math.PI) / 180), sn = Math.sin((f.a * Math.PI) / 180), lp = pt(f.a, R + 34);
+  const an = Math.abs(c) < 0.2 ? 'middle' : c > 0 ? 'start' : 'end';
+  const dy = sn > 0.9 ? 16 : sn < -0.9 ? -8 : 5;
+  return { ...f, i, p, lp, an, dy };
+});
+const start = pt(F[0].a);
+---
+<div class="loop" id="eco-loop" data-loop={JSON.stringify(F)}>
+  <div class="loop-fig rv">
+    <svg viewBox="0 0 640 600" role="img" aria-labelledby="loop-title">
+      <title id="loop-title">Ecosystem loop: Capital, Network, Protocols, Labs, Vaults, Experience</title>
+      <line class="axis" x1="320" y1="24" x2="320" y2="238"/><line class="axis" x1="320" y1="368" x2="320" y2="580"/>
+      <text class="ax-t" x="96" y="44" fill="#9496E6">capital</text>
+      <text class="ax-t" x="544" y="44" text-anchor="end" fill="#6FB0B4">labs</text>
+      <circle class="ring-2" cx="320" cy="300" r="252"/>
+      <circle class="ring" cx="320" cy="300" r="200"/>
+      <g>{arcs.map((a) => <path class="arc" d={a.d} stroke={a.stroke} style={`opacity:${a.on ? 1 : 0}`} />)}</g>
+      <text class="ctr-s" x="320" y="276" text-anchor="middle">compounds</text>
+      <text class="ctr-t" x="320" y="312" text-anchor="middle">Experience</text>
+      <text class="ctr-t" x="320" y="346" text-anchor="middle">&amp; network</text>
+      <g>
+        {nodes.map((n) => (
+          <g class:list={['node', n.s, { on: n.i === 0 }]} tabindex="0" role="button" aria-label={n.t} data-i={n.i}>
+            <circle class="o" cx={n.p[0]} cy={n.p[1]} r="12"/><circle class="i" cx={n.p[0]} cy={n.p[1]} r="4"/>
+            <text class="n" x={n.lp[0]} y={n.lp[1] + n.dy - 18} text-anchor={n.an}>{`0${n.i + 1}`}</text>
+            <text x={n.lp[0]} y={n.lp[1] + n.dy} text-anchor={n.an}>{n.t}</text>
+          </g>
+        ))}
+      </g>
+      <circle class="dot" r="4" cx={start[0]} cy={start[1]}/>
+    </svg>
+  </div>
+  <div class="loop-side rv d1">
+    <div class="loop-card" aria-live="polite">
+      <div class="top swap"><span class="eno">01 / 06</span><span class="ent c">gami capital</span></div>
+      <h3 class="swap">{F[0].t}</h3>
+      <p class="swap">{F[0].x}</p>
+    </div>
+    <div class="loop-ctrl">
+      {F.map((f, i) => <button class:list={{ on: i === 0 }} aria-label={`Step ${i + 1}: ${f.t}`} data-i={i}></button>)}
+      <button class="pp">pause</button>
+    </div>
+    <ol class="loop-list">
+      {F.map((f, i) => <li><span class={`n ${f.s}`}>{`0${i + 1}`}</span><h3 class="lh">{f.t}<small>{f.e}</small></h3><p>{f.x}</p></li>)}
+      <li class="lp"><span class="n">↺</span><h3 class="lh">Back to Capital</h3><p>Each cycle adds experience and contacts for the next investment.</p></li>
+    </ol>
+    <p class="case"><b>Lagoon</b> is a Gami Capital portfolio company (pre-seed, 2024) and one of the vault infrastructure providers Gami Labs builds on. <a href="/portfolio/lagoon">Read the case →</a></p>
+  </div>
+</div>
+
+<script>
+  const root = document.getElementById('eco-loop');
+  if (root) {
+    const F = JSON.parse(root.dataset.loop!) as { t: string; e: string; s: string; a: number; x: string }[];
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const CX = 320, CY = 300, R = 200;
+    const pt = (a: number) => { const t = (a * Math.PI) / 180; return [CX + R * Math.cos(t), CY + R * Math.sin(t)]; };
+    const nodes = root.querySelectorAll<SVGGElement>('.node');
+    const arcs = root.querySelectorAll<SVGPathElement>('.arc');
+    const bars = root.querySelectorAll<HTMLButtonElement>('.loop-ctrl button:not(.pp)');
+    const play = root.querySelector<HTMLButtonElement>('.pp')!;
+    const dot = root.querySelector<SVGCircleElement>('.dot')!;
+    const card = root.querySelector('.loop-card')!;
+    const top = card.querySelector('.top')!, eno = card.querySelector('.eno')!, ent = card.querySelector('.ent')!;
+    const h3 = card.querySelector('h3')!, p = card.querySelector('p')!;
+    let cur = 0, paused = reduce, angle = F[0].a, target = F[0].a, last = 0, hold = 0, inView = false;
+
+    function go(i: number, user = false) {
+      if (user) { paused = true; play.textContent = 'play'; }
+      if (i === cur) return;
+      cur = i;
+      nodes.forEach((n, k) => n.classList.toggle('on', k === i));
+      bars.forEach((b, k) => b.classList.toggle('on', k === i));
+      arcs.forEach((a, k) => { a.style.opacity = (k - i + 6) % 6 === 5 ? '1' : '0'; });
+      let ta = F[i].a; while (ta < angle - 180) ta += 360; while (ta > angle + 180) ta -= 360; target = ta; if (reduce) angle = target;
+      const sw = [top, h3, p]; sw.forEach((e) => e.classList.add('out'));
+      setTimeout(() => {
+        const f = F[i];
+        eno.textContent = `0${i + 1} / 06`; ent.textContent = f.e; ent.className = 'ent ' + f.s; h3.textContent = f.t; p.textContent = f.x;
+        sw.forEach((e) => e.classList.remove('out'));
+      }, reduce ? 0 : 220);
+      hold = 0;
+    }
+    nodes.forEach((n) => {
+      const i = Number(n.dataset.i);
+      n.addEventListener('mousedown', (e) => e.preventDefault());
+      n.addEventListener('click', () => { go(i, true); (n as unknown as HTMLElement).blur(); });
+      n.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(i, true); } });
+    });
+    bars.forEach((b) => b.addEventListener('click', () => go(Number(b.dataset.i), true)));
+    play.addEventListener('click', () => { paused = !paused; play.textContent = paused ? 'play' : 'pause'; });
+    if (reduce) play.textContent = 'play';
+    new IntersectionObserver((es) => { inView = es[0].isIntersecting; }, { threshold: 0.25 }).observe(root.querySelector('.loop-fig')!);
+    function tick(t: number) {
+      const dt = Math.min(64, t - (last || t)); last = t;
+      angle += (target - angle) * Math.min(1, dt * 0.006);
+      const q = pt(angle); dot.setAttribute('cx', String(q[0])); dot.setAttribute('cy', String(q[1]));
+      if (!paused && inView) { hold += dt; if (hold > 3800) go((cur + 1) % 6); }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+</script>

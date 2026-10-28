@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+import InsightList from '../../components/InsightList.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { getInsights } from '../../lib/content';
+import { orgId, personId, isoDate } from '../../lib/seo';
+
+const posts = await getInsights();
+const crumbs = [{ name: 'Insights', href: '/insights' }];
+const site = Astro.site!;
+---
+<Base
+  title="Insights | Gami Capital"
+  description="Investment theses, market structure notes and lessons from running capital onchain, by the Gami Capital team."
+  crumbs={crumbs}
+  jsonld={[{
+    '@type': 'Blog', name: 'Gami Capital Insights', url: new URL('/insights', site).href, publisher: { '@id': orgId(site) },
+    blogPost: posts.map((p) => ({ '@type': 'BlogPosting', headline: p.data.title, url: new URL(`/insights/${p.id}`, site).href, datePublished: isoDate(p.data.date), author: { '@id': personId(p.data.author.id, site) } })),
+  }]}
+>
+  <PageHero
+    crumbs={crumbs}
+    ix="04"
+    title="Notes from the onchain economy."
+    lead="Investment theses and market notes from the Gami Capital team."
+  />
+
+  <section class="sec" data-nav="light" style="padding-top:88px">
+    <div class="wrap">
+      <InsightList posts={posts} level="h2" />
+    </div>
+  </section>
+
+  <CtaBand />
+</Base>

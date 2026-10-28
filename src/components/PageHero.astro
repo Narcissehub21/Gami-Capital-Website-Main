@@ -1,0 +1,40 @@
+---
+import Guides from './Guides.astro';
+interface Crumb { name: string; href: string }
+interface Props {
+  title: string;
+  lead?: string;
+  crumbs?: Crumb[];
+  ix?: string;
+  theme?: 'indigo' | 'light' | 'ink';
+}
+const { title, lead, crumbs = [], ix, theme = 'indigo' } = Astro.props;
+const navTheme = theme === 'ink' ? 'dark' : theme;
+---
+<section class={`phero ${theme}`} data-nav={navTheme}>
+  <div class="wrap">
+    <Guides />
+    {crumbs.length > 0 && (
+      <nav class="crumbs rv" aria-label="Breadcrumb">
+        <a href="/">home</a>
+        {crumbs.map((c, i) => (
+          <>
+            <span aria-hidden="true">/</span>
+            {i === crumbs.length - 1 ? <span aria-current="page">{c.name.toLowerCase()}</span> : <a href={c.href}>{c.name.toLowerCase()}</a>}
+          </>
+        ))}
+      </nav>
+    )}
+    <div class="phero-body">
+      <div class="phero-main">
+        <slot name="before-title" />
+        {ix && <span class="eyebrow rv"><span class="ix">{ix}</span>{crumbs.length ? crumbs[crumbs.length - 1].name : ''}</span>}
+        <h1 class="rv d1">{title}</h1>
+        {lead && <p class="lead rv d2">{lead}</p>}
+        <slot name="after-lead" />
+      </div>
+      <slot name="side" />
+    </div>
+    <slot />
+  </div>
+</section>

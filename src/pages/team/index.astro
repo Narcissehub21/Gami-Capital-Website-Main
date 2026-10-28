@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+import Avatar from '../../components/Avatar.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { getTeam } from '../../lib/content';
+import { orgId, personId } from '../../lib/seo';
+import { SITE } from '../../site.config.mjs';
+
+const team = await getTeam();
+const crumbs = [{ name: 'Team', href: '/team' }];
+const site = Astro.site!;
+---
+<Base
+  title="Team | The people behind Gami Capital"
+  description="The people behind Gami Capital: venture investing, structuring and onchain data for the companies building onchain finance."
+  crumbs={crumbs}
+  jsonld={[{
+    '@type': 'AboutPage', name: 'Gami Capital team', url: new URL('/team', site).href, about: { '@id': orgId(site) },
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: team.map((p, i) => ({ '@type': 'ListItem', position: i + 1, item: { '@id': personId(p.id, site), '@type': 'Person', name: p.data.name, jobTitle: p.data.role, url: new URL(`/team/${p.id}`, site).href } })),
+    },
+  }]}
+>
+  <PageHero
+    crumbs={crumbs}
+    ix="05"
+    title="The people behind Gami Capital."
+    lead="Investors and operators who have run capital onchain, and who now back the companies building the infrastructure for it."
+  />
+
+  <section class="sec" data-nav="light" style="padding-top:88px">
+    <div class="wrap">
+      <div class="people">
+        {team.map((p) => (
+          <article class="person rv">
+            <Avatar name={p.data.name} photo={p.data.photo} size={112} />
+            <h2><a href={`/team/${p.id}`}>{p.data.name}</a></h2>
+            <span class="role">{p.data.role}</span>
+            <p>{p.data.summary}</p>
+            <span class="go" aria-hidden="true">Profile →</span>
+          </article>
+        ))}
+        <article class="person open rv">
+          <span class="role">join us</span>
+          <h2 style="margin-top:14px"><a href={`mailto:${SITE.email}?subject=Joining%20Gami%20Capital`}>Work with us</a></h2>
+          <p>We are always glad to hear from analysts and operators who know onchain markets from the inside.</p>
+          <span class="go" aria-hidden="true">Write to us →</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand />
+</Base>

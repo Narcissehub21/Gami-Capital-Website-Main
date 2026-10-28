@@ -1,0 +1,20 @@
+---
+import { getEntry } from 'astro:content';
+import LegalDoc from '../components/LegalDoc.astro';
+import { SITE } from '../site.config.mjs';
+
+const entry = (await getEntry('legal', 'legal-notice'))!;
+const L = SITE.legal;
+const facts = [
+  { k: 'entity', v: SITE.legalName },
+  { k: 'office', v: `${SITE.address.street}, ${SITE.address.postalCode} ${SITE.address.city}, ${SITE.address.countryName}` },
+  { k: 'email', v: SITE.email, href: `mailto:${SITE.email}` },
+  L.uid && { k: 'company no.', v: L.uid },
+  L.register && { k: 'register', v: L.register },
+  L.vat && { k: 'vat', v: L.vat },
+  L.publicationDirector && { k: 'publisher', v: L.publicationDirector },
+  { k: 'regulatory', v: L.regulatory, href: L.sroUrl },
+  { k: 'hosting', v: L.host, href: L.hostUrl },
+].filter(Boolean) as { k: string; v: string; href?: string }[];
+---
+<LegalDoc entry={entry} path="/legal" facts={facts} />

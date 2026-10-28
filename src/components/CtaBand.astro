@@ -1,0 +1,27 @@
+---
+import Guides from './Guides.astro';
+interface Btn { href: string; label: string; external?: boolean }
+interface Props { title?: string; text?: string; primary?: Btn; secondary?: Btn }
+const {
+  title = 'Work with Gami Capital.',
+  text = 'We would like to hear from founders building onchain infrastructure and from qualified investors looking for exposure to it.',
+  primary = { href: '/contact', label: 'Get in touch' },
+  secondary = { href: '/contact?role=founder', label: 'Send your deck' },
+} = Astro.props;
+const ext = (b: Btn) => (b.external ? { target: '_blank', rel: 'noopener' } : {});
+---
+<section class="cta-band" data-nav="indigo">
+  <div class="wrap">
+    <Guides />
+    <div class="cta-in">
+      <h2 class="rv">{title}</h2>
+      <div class="cta-side rv d1">
+        <p>{text}</p>
+        <div class="cta-btns">
+          <a class="btn btn-w" href={primary.href} {...ext(primary)}>{primary.label} <span class="ar" aria-hidden="true">→</span></a>
+          <a class="btn btn-o" href={secondary.href} {...ext(secondary)}>{secondary.label}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

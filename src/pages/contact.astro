@@ -1,0 +1,156 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import Doors from '../components/Doors.astro';
+import Guides from '../components/Guides.astro';
+import { SITE } from '../site.config.mjs';
+import { orgId } from '../lib/seo';
+
+const crumbs = [{ name: 'Contact', href: '/contact' }];
+const site = Astro.site!;
+const roles = [
+  { v: 'founder', l: 'Founder' },
+  { v: 'investor', l: 'Investor' },
+  { v: 'partner', l: 'Partner' },
+  { v: 'press', l: 'Press' },
+  { v: 'other', l: 'Other' },
+];
+---
+<Base
+  title="Contact | Gami Capital"
+  description={`Contact Gami Capital in Geneva. Founders can send a deck, investors can ask about access to onchain venture exposure. Email ${SITE.email}.`}
+  crumbs={crumbs}
+  jsonld={[{
+    '@type': 'ContactPage', name: 'Contact Gami Capital', url: new URL('/contact', site).href,
+    about: { '@id': orgId(site) },
+  }]}
+>
+  <PageHero
+    crumbs={crumbs}
+    title="Contact Gami Capital."
+    lead="Tell us who you are and what you are working on, and the right person on the team will reply."
+  />
+
+  <section class="sec" data-nav="light" id="write">
+    <div class="wrap">
+      <div class="contact-grid">
+        <div class="l">
+          <span class="eyebrow rv" style="margin-bottom:22px"><span class="ix">01</span>Write to us</span>
+          <h2 class="rv d1">Send us a message.</h2>
+          <p class="rv d2">Founders can send a deck or a short description of the company. Investors can tell us about their mandate and the exposure they are looking for.</p>
+          <dl class="rv d2">
+            <dt>email</dt><dd><a href={`mailto:${SITE.email}`}>{SITE.email}</a></dd>
+            <dt>office</dt><dd>{SITE.legalName}<br>{SITE.address.street}<br>{SITE.address.postalCode} {SITE.address.city}, {SITE.address.countryName}</dd>
+            <dt>follow</dt><dd><a href={SITE.linkedin} target="_blank" rel="noopener">LinkedIn</a>, <a href={SITE.x} target="_blank" rel="noopener">X</a></dd>
+          </dl>
+        </div>
+        <div class="r rv d1">
+          <form class="form" id="contact-form" action="/api/contact" method="post" novalidate data-email={SITE.email}>
+            <fieldset class="field full" style="border:0;padding:0;margin:0">
+              <legend class="lab">I am a</legend>
+              <div class="roles">
+                {roles.map((r, i) => (
+                  <label><input type="radio" name="role" value={r.v} checked={i === 0}><span>{r.l}</span></label>
+                ))}
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="f-name">Name</label>
+              <input id="f-name" name="name" type="text" autocomplete="name" required maxlength="120">
+            </div>
+            <div class="field">
+              <label for="f-email">Email</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required maxlength="200">
+            </div>
+            <div class="field">
+              <label for="f-company">Company or organisation</label>
+              <input id="f-company" name="company" type="text" autocomplete="organization" maxlength="160">
+            </div>
+            <div class="field">
+              <label for="f-link" data-founder="Website or deck link" data-default="Website">Website or deck link</label>
+              <input id="f-link" name="link" type="url" inputmode="url" placeholder="https://" maxlength="400">
+            </div>
+            <div class="field full">
+              <label for="f-message">Message</label>
+              <textarea id="f-message" name="message" required minlength="20" maxlength="5000"></textarea>
+            </div>
+            <div class="hp" aria-hidden="true" inert>
+              <label for="f-fax">Leave this field empty</label>
+              <input id="f-fax" name="fax" type="text" tabindex="-1" autocomplete="off">
+            </div>
+            <input type="hidden" name="t" value="">
+            <label class="consent full">
+              <input type="checkbox" name="consent" value="yes" required>
+              <span>I agree that {SITE.legalName} uses this information to answer my message, as described in the <a href="/privacy">privacy policy</a>.</span>
+            </label>
+            <div class="send full">
+              <button class="btn" type="submit">Send message <span class="ar" aria-hidden="true">→</span></button>
+              <p class="form-msg" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="contact" data-nav="indigo">
+    <section class="sec">
+      <div class="wrap">
+        <Guides />
+        <h2 class="rv" style="font-size:clamp(34px,4vw,56px);margin-bottom:56px">Other ways to reach us.</h2>
+        <Doors />
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  if (form) {
+    const msg = form.querySelector('.form-msg')!;
+    const btn = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    const t = form.querySelector<HTMLInputElement>('input[name=t]')!;
+    const link = form.querySelector<HTMLLabelElement>('label[for=f-link]')!;
+    const email = form.dataset.email!;
+    t.value = String(Date.now());
+
+    // Pre-select the role from ?role=founder|investor|...
+    const pre = new URLSearchParams(location.search).get('role');
+    const radio = pre && form.querySelector<HTMLInputElement>(`input[name=role][value="${CSS.escape(pre)}"]`);
+    if (radio) radio.checked = true;
+    const syncLabel = () => {
+      const role = (form.querySelector<HTMLInputElement>('input[name=role]:checked') || { value: '' }).value;
+      link.textContent = role === 'founder' ? link.dataset.founder! : link.dataset.default!;
+    };
+    form.addEventListener('change', syncLabel); syncLabel();
+
+    const say = (text: string, cls = '') => { msg.className = 'form-msg ' + cls; msg.innerHTML = text; };
+    const mailtoFallback = (data: Record<string, string>) => {
+      const body = `${data.message}\n\n${data.name}${data.company ? ', ' + data.company : ''}${data.link ? '\n' + data.link : ''}`;
+      return `mailto:${email}?subject=${encodeURIComponent('Website: ' + (data.role || 'contact'))}&body=${encodeURIComponent(body)}`;
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) {
+        const bad = form.querySelector<HTMLElement>(':invalid');
+        bad?.focus();
+        say('Please fill in your name, a valid email, a message of at least 20 characters and tick the consent box.', 'err');
+        return;
+      }
+      const data = Object.fromEntries(new FormData(form)) as Record<string, string>;
+      btn.disabled = true; say('Sending…');
+      try {
+        const r = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(data) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) throw new Error(j.error || 'send failed');
+        form.reset(); syncLabel(); t.value = String(Date.now());
+        say('Thank you. Your message has reached the team and we will come back to you shortly.', 'ok');
+      } catch {
+        say(`The form could not be sent. You can <a href="${mailtoFallback(data)}">send it by email instead</a> or write to <a href="mailto:${email}">${email}</a>.`, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+</script>

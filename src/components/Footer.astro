@@ -1,0 +1,24 @@
+---
+import { SITE } from '../site.config.mjs';
+const year = new Date().getFullYear();
+---
+<footer id="about" data-nav="dark">
+  <div class="wrap">
+    <div class="ft">
+      <div class="ft-brand">
+        <a class="logo" href="/" aria-label="Gami Capital, home">Gami<i></i><span>Capital</span></a>
+        <dl>
+          <dt>entity</dt><dd>{SITE.legalName}</dd>
+          <dt>address</dt><dd>{SITE.address.street}, {SITE.address.postalCode} {SITE.address.city}, {SITE.address.countryName}</dd>
+          <dt>contact</dt><dd><a href={`mailto:${SITE.email}`}>{SITE.email}</a></dd>
+        </dl>
+      </div>
+      <div class="ft-col"><div class="h">capital</div><a href="/approach">Approach</a><a href="/portfolio">Portfolio</a><a href="/team">Team</a></div>
+      <div class="ft-col"><div class="h">read</div><a href="/insights">Insights</a><a href="/ecosystem">Ecosystem</a><a href={SITE.labsUrl} target="_blank" rel="noopener">Gami Labs ↗</a></div>
+      <div class="ft-col"><div class="h">follow</div><a href={SITE.linkedin} target="_blank" rel="noopener">LinkedIn</a><a href={SITE.x} target="_blank" rel="noopener">X</a><a href="/rss.xml">RSS</a></div>
+      <div class="ft-col"><div class="h">legal</div><a href="/legal">Legal notice</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a></div>
+    </div>
+    <div class="disc">This website is for information only. It is not an offer or solicitation to buy or sell any security, token or financial product, and it is not investment, legal or tax advice. Products and services referred to are intended for qualified investors only and may not be available in every jurisdiction. Digital assets carry significant risk, including total loss of capital.</div>
+    <div class="ft-bot"><span>© {year} {SITE.legalName}</span><a href="#main">back to top ↑</a></div>
+  </div>
+</footer>

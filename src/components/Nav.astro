@@ -1,0 +1,28 @@
+---
+import { NAV, SITE } from '../site.config.mjs';
+interface Props { theme: 'indigo' | 'light' | 'dark' }
+const { theme } = Astro.props;
+const here = Astro.url.pathname.replace(/\.html$/, '');
+const isOn = (href: string) => here === href || here.startsWith(href + '/');
+---
+<header class={`nav t-${theme}`} id="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Gami Capital, home">Gami<i></i><span>Capital</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      {NAV.map((l) => <a href={l.href} class:list={{ on: isOn(l.href) }} aria-current={isOn(l.href) ? 'page' : undefined}>{l.label}</a>)}
+    </nav>
+    <span class="sp"></span>
+    <div class="ent-sw" aria-label="Gami entities">
+      <a class="on" href="/">capital</a>
+      <a class="lb" href={SITE.labsUrl} target="_blank" rel="noopener">labs ↗</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn" href="/contact">Contact</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="sheet"><i></i><i></i></button>
+  </div>
+</header>
+<div class="sheet" id="sheet" aria-hidden="true" inert>
+  {NAV.map((l, i) => <a class="big" href={l.href}>{l.label} <span>{String(i + 1).padStart(2, '0')}</span></a>)}
+  <div class="foot"><a class="btn btn-w" href="/contact">Contact</a><a class="btn btn-o" href={SITE.labsUrl} target="_blank" rel="noopener">Gami Labs ↗</a></div>
+</div>

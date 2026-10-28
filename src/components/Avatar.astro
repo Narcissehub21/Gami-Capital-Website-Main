@@ -1,0 +1,8 @@
+---
+import { initials } from '../lib/seo';
+interface Props { name: string; photo?: string; size?: number }
+const { name, photo, size = 120 } = Astro.props;
+---
+{photo
+  ? <img class="avatar" src={photo} alt={`Portrait of ${name}`} width={size} height={size} loading="lazy" decoding="async">
+  : <span class="avatar ph" style={`--s:${size}px`} aria-hidden="true">{initials(name)}</span>}

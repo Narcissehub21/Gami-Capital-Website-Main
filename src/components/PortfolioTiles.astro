@@ -1,0 +1,96 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { CATEGORIES } from '../site.config.mjs';
+interface Props {
+  companies: CollectionEntry<'portfolio'>[];
+  filters?: boolean;
+  pitch?: boolean;
+  headingLevel?: 'h2' | 'h3';
+}
+const { companies, filters = true, pitch = true } = Astro.props;
+const keys = Object.keys(CATEGORIES) as (keyof typeof CATEGORIES)[];
+const cnt = (k: string) => companies.filter((c) => c.data.category === k).length;
+const years = companies.map((c) => c.data.year);
+const span = `${Math.min(...years)}→${Math.max(...years)}`;
+---
+{filters && (
+  <>
+    <div class="pf-top rv">
+      <div class="pf-stat"><span class="pf-n" data-pf-n>{companies.length}</span><small data-pf-l>companies<br>{span}</small></div>
+      <div class="filters" role="group" aria-label="Filter by category">
+        <button class="on" data-f="all" aria-pressed="true">All<sup>{companies.length}</sup></button>
+        {keys.map((k) => <button data-f={k} data-n={CATEGORIES[k].name} aria-pressed="false"><i style={`background:${CATEGORIES[k].color}`}></i>{CATEGORIES[k].name}<sup>{cnt(k)}</sup></button>)}
+      </div>
+    </div>
+    <div class="comp rv" aria-hidden="true"><div class="bar">{keys.map((k) => <i data-k={k} style={`flex-grow:${cnt(k)};background:${CATEGORIES[k].color}`}></i>)}</div></div>
+  </>
+)}
+<div class="tiles" data-span={span}>
+  {companies.map((c) => {
+    const d = c.data;
+    return (
+      <a class="tile" href={`/portfolio/${c.id}`} data-k={d.category}
+         style={`--c:${CATEGORIES[d.category].color};--a:${d.accent};--b:${d.tint}`}>
+        {d.logo && <span class="rev" aria-hidden="true" data-a={d.accent} data-b={d.tint}><img src={d.logo} alt="" width="52" height="52" loading="lazy" decoding="async"></span>}
+        <span class="nm">{d.name}<span class="go" aria-hidden="true">→</span></span>
+        <span class="se">{d.sector}</span>
+        <span class="ds">{d.summary}</span>
+        {d.labsInfra && <span class="x">labs infra</span>}
+        <span class="mt"><b>{d.stage.toLowerCase()}</b><span>{d.year}</span></span>
+      </a>
+    );
+  })}
+  {pitch && (
+    <a class="tile pitch" href="/contact">
+      <span class="nm">Your company<span class="go" aria-hidden="true">→</span></span>
+      <span class="se">Building onchain infrastructure?</span>
+      <span class="mt"><b>pitch us</b><span>{new Date().getFullYear()}</span></span>
+    </a>
+  )}
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.tiles').forEach((tiles) => {
+    // Pixel mosaic in the brand colours over each visual (decorative).
+    tiles.querySelectorAll<HTMLElement>('.rev').forEach((rv) => {
+      const cols = [rv.dataset.a!, rv.dataset.b!, rv.dataset.a!, rv.dataset.b!, '#ffffff'];
+      const px = document.createElement('span'); px.className = 'px';
+      for (let k = 0; k < 64; k++) {
+        const q = document.createElement('i');
+        q.style.background = cols[(Math.random() * cols.length) | 0];
+        q.style.transitionDelay = ((120 + Math.random() * 620) | 0) + 'ms';
+        px.appendChild(q);
+      }
+      rv.appendChild(px);
+    });
+    // On touch screens the first tap shows the description, the second opens the page.
+    if (matchMedia('(hover: none)').matches) {
+      tiles.addEventListener('click', (e) => {
+        const t = (e.target as HTMLElement).closest('a.tile:not(.pitch)');
+        if (!t) return;
+        if (!t.classList.contains('show')) {
+          e.preventDefault();
+          tiles.querySelectorAll('.tile.show').forEach((x) => x.classList.remove('show'));
+          t.classList.add('show');
+        }
+      });
+    }
+    const wrap = tiles.parentElement!;
+    const fw = wrap.querySelector('.filters');
+    if (!fw) return;
+    const n = wrap.querySelector('[data-pf-n]')!, l = wrap.querySelector('[data-pf-l]')!;
+    const span = tiles.dataset.span;
+    fw.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.addEventListener('click', () => {
+      const f = b.dataset.f!;
+      fw.querySelectorAll<HTMLButtonElement>('button').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      let count = 0;
+      tiles.querySelectorAll<HTMLElement>('.tile:not(.pitch)').forEach((t) => {
+        const match = f === 'all' || t.dataset.k === f; if (match) count++;
+        t.classList.toggle('dim', !match);
+      });
+      wrap.querySelectorAll<HTMLElement>('.comp .bar i').forEach((i) => { i.style.opacity = f === 'all' || i.dataset.k === f ? '1' : '.15'; });
+      n.textContent = String(count);
+      l.innerHTML = (f === 'all' ? 'companies' : b.dataset.n!.toLowerCase()) + '<br>' + span;
+    }));
+  });
+</script>

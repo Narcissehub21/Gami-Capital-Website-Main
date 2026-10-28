@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import HomeHero from '../components/HomeHero.astro';
+import Guides from '../components/Guides.astro';
+import Pillars from '../components/Pillars.astro';
+import SpecTable from '../components/SpecTable.astro';
+import InsightList from '../components/InsightList.astro';
+import Doors from '../components/Doors.astro';
+import Members from '../components/Members.astro';
+import { getPortfolio, getInsights } from '../lib/content';
+import { organizationLd, websiteLd } from '../lib/seo';
+import { SITE } from '../site.config.mjs';
+
+const companies = await getPortfolio();
+const posts = (await getInsights()).slice(0, 3);
+const years = companies.map((c) => c.data.year);
+const span = `${Math.min(...years)}→${Math.max(...years)}`;
+const site = Astro.site!;
+---
+<Base
+  title="Gami Capital | Institutional capital for the onchain economy"
+  description={SITE.description}
+  nav="indigo"
+  jsonld={[organizationLd(site), websiteLd(site)]}
+>
+  <HomeHero count={companies.length} span={span} />
+
+  <section class="sec" id="capital" data-nav="light">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow rv"><span class="ix">01</span>Gami Capital</span>
+        <h2 class="rv d1">An investment firm for markets that settle onchain.</h2>
+        <p class="rv d2">We back founders who rebuild payments, credit, settlement and asset issuance on blockchain rails, for institutions and enterprises.</p>
+      </div>
+      <Pillars />
+      <div class="more rv"><a href="/approach">Our approach <span aria-hidden="true">→</span></a></div>
+    </div>
+  </section>
+
+  <section class="sec eco" id="ecosystem" data-nav="dark">
+    <div class="wrap">
+      <Guides />
+      <div class="head">
+        <span class="eyebrow rv"><span class="ix">02</span>Ecosystem</span>
+        <h2 class="rv d1">Gami Capital and Gami Labs work side by side.</h2>
+        <p class="rv d2">Gami Capital and Gami Labs are separate companies that work closely together. Founders we back get capital and network from Gami Capital, and onchain liquidity and vault curation from Gami Labs.</p>
+      </div>
+      <SpecTable />
+      <div class="more rv"><a href="/ecosystem">How the two companies work together <span aria-hidden="true">→</span></a></div>
+    </div>
+  </section>
+
+
+  {posts.length > 0 && (
+    <section class="sec latest" id="insights" data-nav="light">
+      <div class="wrap">
+        <div class="head">
+          <span class="eyebrow rv"><span class="ix">03</span>Insights</span>
+          <h2 class="rv d1">Notes from the onchain economy.</h2>
+          <p class="rv d2">Investment theses and market notes from the Gami Capital team.</p>
+        </div>
+        <InsightList posts={posts} compact />
+        <div class="more rv"><a href="/insights">All insights <span aria-hidden="true">→</span></a></div>
+      </div>
+    </section>
+  )}
+
+
+  <div class="contact" id="contact" data-nav="indigo">
+    <section class="sec">
+      <div class="wrap">
+        <Guides />
+        <h2 class="rv">Get in touch with Gami Capital.</h2>
+        <Doors />
+      </div>
+    </section>
+  </div>
+
+  <Members />
+</Base>

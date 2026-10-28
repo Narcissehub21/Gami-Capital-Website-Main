@@ -1,0 +1,42 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHero from './PageHero.astro';
+import { fmtDate, isoDate } from '../lib/seo';
+
+interface Fact { k: string; v: string; href?: string }
+interface Props { entry: CollectionEntry<'legal'>; path: string; facts?: Fact[] }
+const { entry, path, facts = [] } = Astro.props;
+const d = entry.data;
+const { Content, headings } = await render(entry);
+const crumbs = [{ name: d.title, href: path }];
+const toc = headings.filter((h) => h.depth === 2);
+---
+<Base title={`${d.title} | Gami Capital`} description={d.description} crumbs={crumbs} nav="light">
+  <PageHero theme="light" crumbs={crumbs} title={d.title}>
+    <p slot="after-lead" class="art-meta rv d2">last updated <time datetime={isoDate(d.updated)}>{fmtDate(d.updated)}</time></p>
+  </PageHero>
+  <section class="sec legal" data-nav="light" style="padding-top:88px">
+    <div class="wrap">
+      <div class="read">
+        <aside class="aside"><div class="sticky">
+          {facts.length > 0 && (
+            <div class="block">
+              <p class="h">publisher</p>
+              <dl class="facts">
+                {facts.map((f) => <div><dt>{f.k}</dt><dd>{f.href ? <a href={f.href} target={f.href.startsWith('http') ? '_blank' : undefined} rel={f.href.startsWith('http') ? 'noopener' : undefined}>{f.v}</a> : f.v}</dd></div>)}
+              </dl>
+            </div>
+          )}
+          {toc.length > 2 && (
+            <nav class="block toc" aria-label="On this page">
+              <p class="h">on this page</p>
+              {toc.map((h) => <a href={`#${h.slug}`}>{h.text}</a>)}
+            </nav>
+          )}
+        </div></aside>
+        <div class="prose"><Content /></div>
+      </div>
+    </div>
+  </section>
+</Base>

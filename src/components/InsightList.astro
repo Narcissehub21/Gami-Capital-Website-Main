@@ -1,0 +1,24 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { fmtDate, isoDate } from '../lib/seo';
+interface Props { posts: CollectionEntry<'insights'>[]; compact?: boolean; level?: 'h2' | 'h3' }
+const { posts, compact = false, level = 'h3' } = Astro.props;
+const H = level;
+---
+{posts.length === 0 ? (
+  <p class="empty">The first articles are on their way.</p>
+) : (
+  <ol class:list={['posts', { compact }]}>
+    {posts.map((p) => (
+      <li class="post rv">
+        <time datetime={isoDate(p.data.date)}>{fmtDate(p.data.date)}</time>
+        <div class="post-b">
+          <H class="pt"><a href={`/insights/${p.id}`}>{p.data.title}</a></H>
+          <p>{p.data.description}</p>
+          {p.data.tags.length > 0 && <div class="tg">{p.data.tags.map((t) => <span>{t}</span>)}</div>}
+        </div>
+        <span class="go" aria-hidden="true">→</span>
+      </li>
+    ))}
+  </ol>
+)}
